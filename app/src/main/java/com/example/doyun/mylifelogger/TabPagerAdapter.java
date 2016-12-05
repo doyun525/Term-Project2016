@@ -19,11 +19,14 @@ public class TabPagerAdapter extends FragmentStatePagerAdapter {
     public Fragment getItem(int position) {
         switch (position){
             case 0:
-                return new SelectWorkFragment();
+                SelectWorkFragment selectWorkFragment = new SelectWorkFragment();
+                return selectWorkFragment;
             case 1:
-                return new statisticsTapFragment();
+                statisticsTapFragment statisticsTapFragment = new statisticsTapFragment();
+                return statisticsTapFragment;
             case 2:
-                return new ObjectiveFragment();
+                ObjectiveFragment objectiveFragment = new ObjectiveFragment();
+                return objectiveFragment;
         }
         return null;
     }

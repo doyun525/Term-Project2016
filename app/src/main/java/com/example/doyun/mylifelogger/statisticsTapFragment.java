@@ -3,11 +3,15 @@ package com.example.doyun.mylifelogger;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.TextView;
 
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
@@ -39,6 +43,13 @@ public class statisticsTapFragment extends Fragment implements OnMapReadyCallbac
     private MapView mapView;
     private GoogleMap mMap;
     private SupportMapFragment mapFragment;
+
+    private Button statistics_day;
+    private Button statistics_week;
+    private Button statistics_month;
+
+    private TextView statistics_week_view;
+    private TextView statistics_month_view;
 
     public statisticsTapFragment() {
         // Required empty public constructor
@@ -72,8 +83,6 @@ public class statisticsTapFragment extends Fragment implements OnMapReadyCallbac
 
 
 
-
-
     }
 
     @Override
@@ -82,37 +91,93 @@ public class statisticsTapFragment extends Fragment implements OnMapReadyCallbac
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_statistics_tap, container, false);
 
-        SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map);
+        mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map);
 
         mapFragment.getMapAsync(this);
 
-        return inflater.inflate(R.layout.fragment_statistics_tap, container, false);
+        statistics_day = (Button) view.findViewById(R.id.statistics_day);
+        statistics_week = (Button) view.findViewById(R.id.statistics_week);
+        statistics_month = (Button) view.findViewById(R.id.statistics_month);
+        statistics_week_view = (TextView) view.findViewById(R.id.statistics_week_view);
+        statistics_month_view = (TextView) view.findViewById(R.id.statistics_month_view);
+
+        return view;
+
     }
 
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-            mListener.onFragmentInteraction(uri);
-        }
-    }
-/*
     @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        if (context instanceof OnFragmentInteractionListener) {
-            mListener = (OnFragmentInteractionListener) context;
-        } else {
-            throw new RuntimeException(context.toString()
-                    + " must implement OnFragmentInteractionListener");
-        }
-    }
-*/
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        mListener = null;
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+
+        statistics_day.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                statistics_week_view.setVisibility(View.GONE);
+                statistics_month_view.setVisibility(View.GONE);
+                if(mapFragment.getView().getVisibility()!= View.VISIBLE){
+                    mapFragment.getView().setVisibility(View.VISIBLE);
+                }
+                else {
+                    mapFragment.getView().setVisibility(View.GONE);
+                }
+            }
+        });
+
+        statistics_week.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mapFragment.getView().setVisibility(View.GONE);
+                statistics_month_view.setVisibility(View.GONE);
+                if(statistics_week_view.getVisibility()!=View.VISIBLE){
+                    statistics_week_view.setVisibility(View.VISIBLE);
+                }
+                else{
+                    statistics_week_view.setVisibility(View.GONE);
+                }
+            }
+        });
+
+        statistics_month.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mapFragment.getView().setVisibility(View.GONE);
+                statistics_week_view.setVisibility(View.GONE);
+                if(statistics_month_view.getVisibility()!=View.VISIBLE){
+                    statistics_month_view.setVisibility(View.VISIBLE);
+                }
+                else{
+                    statistics_month_view.setVisibility(View.GONE);
+                }
+            }
+        });
+
     }
 
+    /*
+        // TODO: Rename method, update argument and hook method into UI event
+        public void onButtonPressed(Uri uri) {
+            if (mListener != null) {
+                mListener.onFragmentInteraction(uri);
+            }
+        }
+
+        @Override
+        public void onAttach(Context context) {
+            super.onAttach(context);
+            if (context instanceof OnFragmentInteractionListener) {
+                mListener = (OnFragmentInteractionListener) context;
+            } else {
+                throw new RuntimeException(context.toString()
+                        + " must implement OnFragmentInteractionListener");
+            }
+        }
+
+        @Override
+        public void onDetach() {
+            super.onDetach();
+            mListener = null;
+        }
+    */
     @Override
     public void onMapReady(GoogleMap googleMap) {
 
