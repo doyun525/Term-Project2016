@@ -114,12 +114,18 @@ public class SelectWorkFragment extends Fragment {
         mPrefs = getActivity().getPreferences(Context.MODE_PRIVATE);
         if(savedInstanceState!=null){
             workList = savedInstanceState.getStringArrayList("workList");
+            presentWorkType = savedInstanceState.getString("presentWorkType");
         }
         else {
             Gson gson = new Gson();
-            String json = mPrefs.getString("workList", "");
-            workList = gson.fromJson(json, ArrayList.class);
+            try {
+                String json = mPrefs.getString("workList", "");
+                workList = gson.fromJson(json, ArrayList.class);
+            }catch (Exception ex){
 
+            }
+
+            presentWorkType = workList.get(0).toString();
         }
 
         super.onCreate(savedInstanceState);
@@ -136,6 +142,7 @@ public class SelectWorkFragment extends Fragment {
         super.onSaveInstanceState(outState);
         if(workList!=null)
             outState.putStringArrayList("workList", workList);
+        outState.putString("presentWorkType",presentWorkType);
         Log.d("test","onSaveInstanceState");
     }
 
@@ -177,7 +184,7 @@ public class SelectWorkFragment extends Fragment {
         super.onActivityCreated(savedInstanceState);
         if(workList==null)
             workList = new ArrayList<String>(Arrays.asList(defaultWorkList));
-        presentWorkType = workList.get(0).toString();
+
         workText.setText(presentWorkType);
 
         selectWork.setOnClickListener(new View.OnClickListener() {
@@ -301,6 +308,7 @@ public class SelectWorkFragment extends Fragment {
                 final String itemValue = (String) parent.getItemAtPosition(pos);
 
                 AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(getActivity());
+                alertDialogBuilder.setTitle(itemValue);
 
                 alertDialogBuilder.setNeutralButton("수정", new DialogInterface.OnClickListener() {
                     @Override
