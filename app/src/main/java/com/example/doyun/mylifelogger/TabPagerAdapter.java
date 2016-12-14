@@ -1,8 +1,15 @@
 package com.example.doyun.mylifelogger;
 
+import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
+
+import com.example.doyun.mylifelogger.TabFragments.ObjectiveFragment;
+import com.example.doyun.mylifelogger.TabFragments.SelectWorkFragment;
+import com.example.doyun.mylifelogger.TabFragments.statisticsTapFragment;
+
+import java.io.Serializable;
 
 /**
  * Created by doyun on 2016-11-28.
@@ -10,6 +17,11 @@ import android.support.v4.app.FragmentStatePagerAdapter;
 
 public class TabPagerAdapter extends FragmentStatePagerAdapter {
     private int tabCount;
+
+    SelectWorkFragment selectWorkFragment;
+    com.example.doyun.mylifelogger.TabFragments.statisticsTapFragment statisticsTapFragment;
+    ObjectiveFragment objectiveFragment;
+
     public TabPagerAdapter(FragmentManager fm, int tabCount) {
         super(fm);
         this.tabCount=tabCount;
@@ -19,13 +31,16 @@ public class TabPagerAdapter extends FragmentStatePagerAdapter {
     public Fragment getItem(int position) {
         switch (position){
             case 0:
-                SelectWorkFragment selectWorkFragment = new SelectWorkFragment();
+                if(selectWorkFragment==null)
+                    selectWorkFragment = new SelectWorkFragment();
                 return selectWorkFragment;
             case 1:
-                statisticsTapFragment statisticsTapFragment = new statisticsTapFragment();
+                if(statisticsTapFragment==null)
+                    statisticsTapFragment = new statisticsTapFragment();
                 return statisticsTapFragment;
             case 2:
-                ObjectiveFragment objectiveFragment = new ObjectiveFragment();
+                if(objectiveFragment==null)
+                     objectiveFragment = new ObjectiveFragment();
                 return objectiveFragment;
         }
         return null;
@@ -34,5 +49,25 @@ public class TabPagerAdapter extends FragmentStatePagerAdapter {
     @Override
     public int getCount() {
         return tabCount;
+    }
+
+    public  void putData(int position, Object object){
+        switch (position){
+            case 0:
+                if(selectWorkFragment==null)
+                    selectWorkFragment = new SelectWorkFragment();
+                Bundle args = new Bundle();
+                args.putSerializable("db", (Serializable) object);
+                selectWorkFragment.setArguments(args);
+
+            case 1:
+                if(statisticsTapFragment==null)
+                    statisticsTapFragment = new statisticsTapFragment();
+
+            case 2:
+                if(objectiveFragment==null)
+                    objectiveFragment = new ObjectiveFragment();
+
+        }
     }
 }

@@ -1,43 +1,62 @@
-package com.example.doyun.mylifelogger;
+package com.example.doyun.mylifelogger.TabFragments;
 
+import android.Manifest;
+import android.app.DatePickerDialog;
+import android.app.TimePickerDialog;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Color;
-import android.graphics.drawable.Drawable;
+import android.content.pm.PackageManager;
+import android.database.sqlite.SQLiteDatabase;
+import android.location.Location;
+import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
-import android.text.InputType;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.inputmethod.EditorInfo;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.TimePicker;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
+import com.example.doyun.mylifelogger.AddEventDialog;
+import com.example.doyun.mylifelogger.DB.DBHelper;
+import com.example.doyun.mylifelogger.DB.MyEvent;
+import com.example.doyun.mylifelogger.DB.MyWorkData;
+import com.example.doyun.mylifelogger.MapPopupActivity;
+import com.example.doyun.mylifelogger.R;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationAvailability;
+import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.model.LatLng;
 import com.google.gson.Gson;
 
-import org.w3c.dom.Text;
-
+import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.List;
-
 
 
 /**
@@ -48,13 +67,14 @@ import java.util.List;
  * Use the {@link SelectWorkFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class SelectWorkFragment extends Fragment {
+public class SelectWorkFragment extends Fragment implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, com.google.android.gms.location.LocationListener {
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
 
-
+    public static final int ADD_MODE_EVENT = 0;
+    public static final int ADD_MODE_WORK = 1;
 
     // TODO: Rename and change types of parameters
     private String mParam1;
@@ -62,18 +82,24 @@ public class SelectWorkFragment extends Fragment {
 
     private OnFragmentInteractionListener mListener;
 
-    private String[] defaultWorkList = {"업무","공부","게임","과제","운동","이동"};
+    private Location lastedLocation;
+    private int LocationCheckCycle;
+    private int lastedTime;
+    private Boolean move = null;
+
+    private String[] defaultWorkList = {"업무", "공부", "게임", "과제", "운동", "이동"};
     private ArrayList workList;
 
     private String presentWorkType;
 
     private MyWorkData myWorkData;
-    private String detail;
+    private MyEvent myEvent;
 
-    private Button selectWork;
+    private String content;
+
     private Button addEvent;
     private Button addWork;
-    private Button addDetaile;
+    private Button addcontent;
     private Button ListReset;
 
     private TextView workText;
@@ -85,6 +111,12 @@ public class SelectWorkFragment extends Fragment {
     private ListView workListView;
 
     SharedPreferences mPrefs;
+
+    private GoogleApiClient mGoogleApiClient;
+    private LocationRequest mLocationRequest;
+
+    SQLiteDatabase db;
+    DBHelper dbHelper;
 
     public SelectWorkFragment() {
         // Required empty public constructor
@@ -110,23 +142,34 @@ public class SelectWorkFragment extends Fragment {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        Log.d("test","onCreate : "+savedInstanceState);
+        Log.d("test", "onCreate : " + savedInstanceState);
         mPrefs = getActivity().getPreferences(Context.MODE_PRIVATE);
-        if(savedInstanceState!=null){
+        if (savedInstanceState != null) {
             workList = savedInstanceState.getStringArrayList("workList");
             presentWorkType = savedInstanceState.getString("presentWorkType");
-        }
-        else {
+        } else {
             Gson gson = new Gson();
+
             try {
                 String json = mPrefs.getString("workList", "");
                 workList = gson.fromJson(json, ArrayList.class);
-            }catch (Exception ex){
+                Log.d("test", "" + json + " " + workList);
+            } catch (Exception ex) {
 
             }
-
-            presentWorkType = workList.get(0).toString();
+            if (workList != null)
+                presentWorkType = workList.get(0).toString();
         }
+        Calendar c = Calendar.getInstance();
+        Date d = c.getTime();
+        String date = (new SimpleDateFormat("yyyy-MM-dd").format(d));
+        dbHelper = new DBHelper(getActivity(), date + ".db");
+
+        db = dbHelper.getWritableDatabase();
+
+        LocationCheckCycle = 60 * 1000;
+        if (move == null)
+            move = false;
 
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
@@ -140,30 +183,29 @@ public class SelectWorkFragment extends Fragment {
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        if(workList!=null)
+        if (workList != null)
             outState.putStringArrayList("workList", workList);
-        outState.putString("presentWorkType",presentWorkType);
-        Log.d("test","onSaveInstanceState");
+        outState.putString("presentWorkType", presentWorkType);
+        Log.d("test", "onSaveInstanceState");
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        Log.d("test","onCreateView : "+savedInstanceState);
-        View view =  inflater.inflate(R.layout.fragment_select_work, container, false);
+        Log.d("test", "onCreateView : " + savedInstanceState);
+        View view = inflater.inflate(R.layout.fragment_select_work, container, false);
 
-        selectWork = (Button)view.findViewById(R.id.selectwork);
-        addEvent = (Button)view.findViewById(R.id.addevent);
-        addWork = (Button)view.findViewById(R.id.addwork);
+        addEvent = (Button) view.findViewById(R.id.addevent);
+        addWork = (Button) view.findViewById(R.id.addwork);
         workListView = (ListView) view.findViewById(R.id.workList);
-        addDetaile = (Button)view.findViewById(R.id.add_detaile);
-        ListReset = (Button)view.findViewById(R.id.listreset);
+        addcontent = (Button) view.findViewById(R.id.add_content);
+        ListReset = (Button) view.findViewById(R.id.listreset);
 
-        workText = (TextView)view.findViewById(R.id.workText);
+        workText = (TextView) view.findViewById(R.id.workText);
 
-        worktoggle = (ToggleButton)view.findViewById(R.id.worktoggle);
-        selectWorkGroup = (LinearLayout)view.findViewById(R.id.selectWorkGroup);
+        worktoggle = (ToggleButton) view.findViewById(R.id.worktoggle);
+        selectWorkGroup = (LinearLayout) view.findViewById(R.id.selectWorkGroup);
 
         return view;
     }
@@ -176,35 +218,125 @@ public class SelectWorkFragment extends Fragment {
         String json = gson.toJson(workList);
         prefsEditor.putString("workList", json);
         prefsEditor.commit();
+
+        db.close();
+
+        if (mGoogleApiClient.isConnected()) {
+            mGoogleApiClient.disconnect();
+        }
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        if (!mGoogleApiClient.isConnected()) {
+            mGoogleApiClient.connect();
+        }
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        if (mGoogleApiClient.isConnected()) {
+            mGoogleApiClient.disconnect();
+        }
+    }
+
+    public void SaveStart(){
+        Calendar c = Calendar.getInstance();
+        Date d = c.getTime();
+        String date = (new SimpleDateFormat("yyyy-MM-dd").format(d));
+        String time = (new SimpleDateFormat("HH:mm").format(d));
+
+        if (myWorkData == null)
+            myWorkData = new MyWorkData(date, time, presentWorkType, null);
+        //save db
+        if (presentWorkType == "이동") {
+            move = true;
+        }
+        Gson gson = new Gson();
+        String json = gson.toJson(myWorkData);
+
+        ContentValues values = new ContentValues();
+        values.put("time", myWorkData.getStartTime().getTime());
+        values.put("mywork", json);
+
+        db.insert("work", null, values);
+    }
+    public void SaveEnd(){
+        Calendar c = Calendar.getInstance();
+        Date d = c.getTime();
+        String date = (new SimpleDateFormat("yyyy-MM-dd").format(d));
+        String time = (new SimpleDateFormat("HH:mm").format(d));
+        myWorkData.setEndTime(date, time);
+        //save db
+        Gson gson = new Gson();
+        String json = gson.toJson(myWorkData);
+
+        ContentValues values = new ContentValues();
+        values.put("myevent", json);
+
+        db.update("work", values, "time = ?", new String[]{myWorkData.getStartTime().getTime()});
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == AddEventDialog.CLICK_OK) {
+            if (requestCode == ADD_MODE_EVENT) {
+                MyEvent event = (MyEvent) data.getSerializableExtra("event");
+                Gson gson = new Gson();
+                String json = gson.toJson(event);
+
+                ContentValues values = new ContentValues();
+                values.put("time", event.getDate().getTime());
+                values.put("myevent", json);
+
+                db.insert("event", null, values);
+
+            } else if (requestCode == ADD_MODE_WORK) {
+                myWorkData = (MyWorkData) data.getSerializableExtra("work");
+            }
+        }
     }
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        Log.d("test","onActivityCreated : "+savedInstanceState);
+        Log.d("test", "onActivityCreated : " + savedInstanceState);
         super.onActivityCreated(savedInstanceState);
-        if(workList==null)
+
+        if (workList == null)
             workList = new ArrayList<String>(Arrays.asList(defaultWorkList));
+        Log.d("test", "worklist : " + workList);
+        if (mGoogleApiClient == null) {
+            mGoogleApiClient = new GoogleApiClient.Builder(getActivity()).
+                    addConnectionCallbacks(this).
+                    addOnConnectionFailedListener(this).
+                    addApi(LocationServices.API).build();
+        }
+
+        ArrayAdapter adapter = new ArrayAdapter(getActivity(), android.R.layout.simple_list_item_1, workList);
+        workListView.setAdapter(adapter);
+
 
         workText.setText(presentWorkType);
 
-        selectWork.setOnClickListener(new View.OnClickListener() {
+        addEvent.setOnClickListener(new View.OnClickListener() {
+
             @Override
             public void onClick(View v) {
-                if(selectWorkGroup.getVisibility()!=View.GONE) {
-                    selectWorkGroup.setVisibility(View.GONE);
-                }
-                else{
-                    selectWorkGroup.setVisibility(View.VISIBLE);
-                    ArrayAdapter adapter = new ArrayAdapter(getActivity(), android.R.layout.simple_list_item_1, workList );
-                    workListView.setAdapter(adapter);
-                }
+
+                Intent intent = new Intent(getActivity(), AddEventDialog.class);
+                intent.putExtra("mode", ADD_MODE_EVENT);
+                startActivityForResult(intent, ADD_MODE_EVENT);
             }
         });
+
         ListReset.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 workList = new ArrayList<String>(Arrays.asList(defaultWorkList));
-                ArrayAdapter adapter = new ArrayAdapter(getActivity(), android.R.layout.simple_list_item_1, workList );
+                ArrayAdapter adapter = new ArrayAdapter(getActivity(), android.R.layout.simple_list_item_1, workList);
                 workListView.setAdapter(adapter);
                 //workListView.setVisibility(View.GONE);
                 //workListView.setVisibility(View.VISIBLE);
@@ -216,52 +348,24 @@ public class SelectWorkFragment extends Fragment {
         worktoggle.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (worktoggle.isChecked()){
-                    Calendar c = Calendar.getInstance();
-                    Date d = c.getTime();
-                    String date = (new SimpleDateFormat("yyyy-MM-dd").format(d));
-                    String time = (new SimpleDateFormat("HH:mm").format(d));
-                    if(detail!=null)
-                        myWorkData = new MyWorkData(date, time, presentWorkType, detail);
-                    else
-                        myWorkData = new MyWorkData(date, time, presentWorkType);
-                    //save db
-                }
-                else{
-                    Calendar c = Calendar.getInstance();
-                    Date d = c.getTime();
-                    String date = (new SimpleDateFormat("yyyy-MM-dd").format(d));
-                    String time = (new SimpleDateFormat("HH:mm").format(d));
-                    myWorkData.setEndTime(date, time);
-                    //save db
+                if (worktoggle.isChecked()) {
+                    SaveStart();
+                } else {
+                    SaveEnd();
                 }
             }
         });
 
-        addDetaile.setOnClickListener(new View.OnClickListener() {
+        addcontent.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                android.app.AlertDialog.Builder alert = new android.app.AlertDialog.Builder(getActivity());
-                alert.setTitle("세부내용 추가");
-
-                final EditText input = new EditText(getActivity());
-                //input.setInputType(InputType.TYPE_TEXT_FLAG_IME_MULTI_LINE);
-                input.setHorizontallyScrolling(false);
-                input.setLines(5);
-                input.setGravity(Gravity.TOP);
-                alert.setView(input);
 
 
-                alert.setNegativeButton("추가", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        detail = input.getText().toString();
-                        if(myWorkData!=null)
-                            myWorkData.setDetail(detail);
-                    }
-                });
-                alert.setPositiveButton("취소", null);
-                alert.create().show();
+
+                Intent intent = new Intent(getActivity(), AddEventDialog.class);
+                if(myWorkData!=null) intent.putExtra("mywork", myWorkData);
+                intent.putExtra("mode", ADD_MODE_WORK).putExtra("workType", presentWorkType);
+                startActivityForResult(intent, ADD_MODE_WORK);
             }
         });
 
@@ -291,6 +395,9 @@ public class SelectWorkFragment extends Fragment {
                 alert.create().show();
             }
         });
+
+
+
         workListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -306,7 +413,7 @@ public class SelectWorkFragment extends Fragment {
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
                 int pos = position;
                 final String itemValue = (String) parent.getItemAtPosition(pos);
-
+                if(position<defaultWorkList.length) return true;
                 AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(getActivity());
                 alertDialogBuilder.setTitle(itemValue);
 
@@ -350,6 +457,80 @@ public class SelectWorkFragment extends Fragment {
         });
 
     }
+
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+        mLocationRequest = new LocationRequest();
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        mLocationRequest.setInterval(LocationCheckCycle/2);
+        mLocationRequest.setFastestInterval(LocationCheckCycle/4);
+
+        if(PackageManager.PERMISSION_GRANTED != ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_COARSE_LOCATION)
+                && ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED){
+        }
+        lastedLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+        startLocationUpdates();
+    }
+    protected void startLocationUpdates() {
+        if (ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                && ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+        else {
+            LocationAvailability locationAvailability = LocationServices.FusedLocationApi.getLocationAvailability(mGoogleApiClient);
+
+            if (locationAvailability.isLocationAvailable()) {
+                LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+            } else {
+                Toast.makeText(getActivity(), "Location Unavialable", Toast.LENGTH_LONG).show();
+            }
+        }
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+
+    }
+
+
+
+    @Override
+    public void onLocationChanged(Location location) {
+        double distance = 0;
+        long time = System.currentTimeMillis();
+        if((distance = lastedLocation.distanceTo(location)) > 10){
+            if(worktoggle.isChecked()){
+
+            }
+        }
+        if(location.getAccuracy()<=20 && time -lastedTime>=LocationCheckCycle) {
+            if (lastedLocation == null) {
+                lastedLocation = new Location("");
+                lastedLocation.setLatitude(location.getLatitude());
+                lastedLocation.setLongitude(location.getLongitude());
+
+            } else if ((distance = lastedLocation.distanceTo(location)) > 10) {
+
+                lastedLocation.setLatitude(location.getLatitude());
+                lastedLocation.setLongitude(location.getLongitude());
+            }
+            Log.d("test", "LocationCheckCycle " + LocationCheckCycle);
+        }
+    }
+
+
 
     /*
     // TODO: Rename method, update argument and hook method into UI event

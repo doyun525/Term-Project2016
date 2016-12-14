@@ -5,6 +5,7 @@ package com.example.doyun.mylifelogger;
         import android.content.Intent;
         import android.content.pm.PackageManager;
         import android.support.annotation.NonNull;
+        import android.support.multidex.MultiDex;
         import android.support.v4.app.ActivityCompat;
         import android.support.v4.content.ContextCompat;
         import android.support.v7.app.AppCompatActivity;
@@ -20,6 +21,8 @@ public class PermissionCheckActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_permission_check);
+
+        MultiDex.install(this);
 
         List permissionString = new ArrayList<String>();
 
@@ -55,6 +58,7 @@ public class PermissionCheckActivity extends AppCompatActivity {
         }
 
     }
+
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
