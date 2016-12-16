@@ -21,14 +21,14 @@
         android:layout_weight="0">
 
         <Button
-            android:text="Button"
+            android:text="확인"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/ok"
             android:layout_weight="1" />
 
         <Button
-            android:text="Button"
+            android:text="취소"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/cancle"

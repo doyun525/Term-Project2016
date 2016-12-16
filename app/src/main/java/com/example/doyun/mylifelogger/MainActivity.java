@@ -1,5 +1,8 @@
 package com.example.doyun.mylifelogger;
 
+import android.app.ActivityManager;
+import android.content.Context;
+import android.content.Intent;
 import android.location.Location;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -28,17 +31,27 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.d("test","Mainactivity onDestroy");
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Log.d("test", "startmain");
         Toast.makeText(this, "매인", Toast.LENGTH_LONG);
 
+
+        startService(new Intent(MainActivity.this, gpsService.class));
+
         //Toolbar toolbar = (Toolbar)findViewById(R.id.toolbar);
         //setSupportActionBar(toolbar);
 
         tabLayout = (TabLayout) findViewById(R.id.tabLayout);
         tabLayout.addTab(tabLayout.newTab().setText("하고 있는 일"));
+        tabLayout.addTab(tabLayout.newTab().setText("오늘 한일"));
         tabLayout.addTab(tabLayout.newTab().setText("통계"));
         tabLayout.addTab(tabLayout.newTab().setText("목표 관리"));
         tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);

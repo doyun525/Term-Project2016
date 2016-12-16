@@ -1,10 +1,12 @@
 package com.example.doyun.mylifelogger.DB;
 
+import java.io.Serializable;
+
 /**
  * Created by doyun on 2016-12-06.
  */
 
-public class TimeObject {
+public class TimeObject implements Serializable {
     String date;
     String time;
     int year, month, day;

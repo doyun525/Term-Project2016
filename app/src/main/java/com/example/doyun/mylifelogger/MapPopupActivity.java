@@ -64,6 +64,7 @@ public class MapPopupActivity extends FragmentActivity implements OnMapReadyCall
             public void onClick(View v) {
                 Intent intent = getIntent();
                 intent.putExtra("location", location);
+                Log.d("test", "map location: "+location);
                 setResult(AddEventDialog.CLICK_OK,intent);
                 finish();
             }

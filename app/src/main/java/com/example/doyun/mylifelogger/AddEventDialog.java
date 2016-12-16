@@ -1,29 +1,26 @@
 package com.example.doyun.mylifelogger;
 
-import android.*;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
-import android.app.Dialog;
 import android.app.TimePickerDialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Parcelable;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.Window;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
@@ -32,18 +29,18 @@ import android.widget.TimePicker;
 import android.widget.Toast;
 
 import com.example.doyun.mylifelogger.DB.MyEvent;
-import com.example.doyun.mylifelogger.DB.MyWorkData;
+import com.example.doyun.mylifelogger.DB.MyWork;
 import com.example.doyun.mylifelogger.TabFragments.SelectWorkFragment;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.maps.model.LatLng;
+import com.google.gson.Gson;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.Serializable;
-import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -88,7 +85,9 @@ public class AddEventDialog extends Activity implements GoogleApiClient.Connecti
 
     MyEvent myEvent;
 
-    MyWorkData myWorkData;
+    MyWork myWork;
+
+    String workType;
 
     Bitmap photo;
 
@@ -102,13 +101,15 @@ public class AddEventDialog extends Activity implements GoogleApiClient.Connecti
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if(resultCode == CLICK_OK) {
+
             switch (requestCode) {
                 case GET_LOCATION: {
+                    if(resultCode!=CLICK_OK) break;
                     Log.d("test", "Intent : " + data);
                     Location location1 = (Location) data.getParcelableExtra("location");
                     Log.d("test", "location1 : " + location1);
                     if (location1 != null) location = location1;
+                    Log.d("test", "location : " + location);
                     break;
                 }
                 case PICK_FROM_ALBUM: {
@@ -118,23 +119,27 @@ public class AddEventDialog extends Activity implements GoogleApiClient.Connecti
                     mImageCaptureUri = data.getData();
                     Intent intent = new Intent("com.android.camera.action.CROP");
                     intent.setDataAndType(mImageCaptureUri, "image/*");
-
+                    try {
+                        photo = MediaStore.Images.Media.getBitmap(getContentResolver(),mImageCaptureUri);
+                        imageView.setImageBitmap(photo);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                     intent.putExtra("outputX", 200).putExtra("outputY", 200).putExtra("aspectX", 1)
                             .putExtra("aspextY", 1).putExtra("scale", true).putExtra("return-data", true);
-                    startActivityForResult(intent, CROP_FROM_IMAGE);
+                    //startActivityForResult(intent, CROP_FROM_IMAGE);
                     break;
                 }
-                case CROP_FROM_IMAGE: {
+                case CROP_FROM_IMAGE:{
+                    Log.d("test", "이미지 수정");
                     if (resultCode != RESULT_OK) return;
 
                     final Bundle extras = data.getExtras();
 
-                    String filePath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/SmartWheel/" + System.currentTimeMillis() + ".jpg";
-
                     if (extras != null) {
                         photo = extras.getParcelable("data");
                         imageView.setImageBitmap(photo);
-
+                        Log.d("test", "이미지 : " + photo);
                         break;
                     }
 
@@ -142,9 +147,11 @@ public class AddEventDialog extends Activity implements GoogleApiClient.Connecti
                     //if (f.exists()) f.delete();
                 }
             }
-        }
+
 
     }
+
+
 
     @Override
     protected void onStart() {
@@ -216,15 +223,26 @@ public class AddEventDialog extends Activity implements GoogleApiClient.Connecti
             title.setFocusable(false);
             edit_time.setVisibility(View.GONE);
             edit_date.setVisibility(View.GONE);
-            myWorkData = (MyWorkData) intent.getSerializableExtra("mywork");
-            if(myWorkData != null){
-                title.setText(myWorkData.getWorkType());
-                place.setText(myWorkData.getPlace());
-                content.setText(myWorkData.getContent());
-                if(myWorkData.getImage()!=null) {
-                    imageView.setImageBitmap(myWorkData.getImage());
+            myWork = intent.getParcelableExtra("mywork");
+            workType = intent.getStringExtra("workType");
+            Log.d("test", "workType:"+workType);
+            title.setText(workType);
+            if(myWork != null){
+
+                place.setText(myWork.getPlace());
+                content.setText(myWork.getContent());
+                if(myWork.getImage()!=null) {
+                    String imgPath = myWork.getImage();
+
+                    Bitmap bitmap = BitmapFactory.decodeFile(imgPath);
+
+                    imageView.setImageBitmap(bitmap);
 
                     addIamge.setText("사진 변경");
+                }
+                if(workType=="이동") {
+                    place.setVisibility(View.GONE);
+                    setLocation.setVisibility(View.GONE);
                 }
             }
         }
@@ -303,28 +321,59 @@ public class AddEventDialog extends Activity implements GoogleApiClient.Connecti
                 String s_place = place.getText().toString();
                 String s_content = content.getText().toString();
 
+                Calendar c = Calendar.getInstance();
+                Date d = c.getTime();
+                String date = (new SimpleDateFormat("yyyy-MM-dd").format(d));
+
+                Intent in = new Intent();
+
+                String Path = Environment.getExternalStorageDirectory().getAbsolutePath()+ File.separator+"MyLifeLogger/image/" + System.currentTimeMillis()+".jpg";
+
+                if(photo!=null){
+                    storeCropImage(photo, Path);
+                }
+
                 if(mode == SelectWorkFragment.ADD_MODE_EVENT){
                     Log.d("test", "사건 추가");
                     myEvent = new MyEvent(date, time, name, s_place, s_content, location);
                     if(photo != null){
-                        myEvent.setImage(photo);
+                        myEvent.setImage(Path);
                     }
-                    intent.putExtra("event", myEvent);
+                    Gson gson = new Gson();
+                    String json = gson.toJson(myEvent);
+                    in.putExtra("event", json);
                 }
                 else if(mode == SelectWorkFragment.ADD_MODE_WORK){
                     Log.d("test","상세추가 : "+location);
                     String workType = intent.getStringExtra("workType");
+                    Log.d("test", "myWork : " + myWork);
+                    if(myWork==null) {
 
-                    myWorkData = new MyWorkData(date, time, workType, s_place, s_content, location);
-                    if(photo != null){
-                        myWorkData.setImage(photo);
+                        myWork = new MyWork(date, time, workType, s_place, s_content, location);
                     }
-                    intent.putExtra("work", myWorkData);
+                    else {
+                        myWork.setStartTime(date, time);
+                        myWork.setContent(s_content);
+                        if (!workType.equals("이동")) {
+                            Log.d("test", "이동아님");
+                            myWork.setLocation(location);
+                            myWork.setPlace(s_place);
+                        }
+                    }
+
+                    if(photo != null){
+                        myWork.setImage(Path);
+                    }
+                    Log.d("test", "mywork : "+myWork + " location : "+myWork.getLocation());
+                    Gson gson = new Gson();
+                    String json = gson.toJson(myWork);
+
+                    in.putExtra("mywork", (Parcelable) myWork);
 
                 }
-                setResult(CLICK_OK, intent);
+                setResult(CLICK_OK, in);
                 finish();
-                onDestroy();
+                //onDestroy();
             }
 
         });
@@ -333,11 +382,36 @@ public class AddEventDialog extends Activity implements GoogleApiClient.Connecti
             public void onClick(View v) {
                 setResult(CLICK_CANCLE, intent);
                 finish();
-                onDestroy();
+                //onDestroy();
             }
         });
 
     }
+
+    private void storeCropImage(Bitmap bitmap, String filePath){
+        String dirPath = Environment.getExternalStorageDirectory().getAbsolutePath()+ File.separator+"MyLifeLogger/image/";
+        File directory = new File(dirPath);
+
+        if(!directory.exists()) directory.mkdir();
+
+        File copyFile = new File(filePath);
+        BufferedOutputStream out = null;
+
+        try {
+            copyFile.createNewFile();
+            out = new BufferedOutputStream(new FileOutputStream(copyFile));
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
+
+            sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(copyFile)));
+
+            out.flush();
+            out.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
 
 
     private  TimePickerDialog.OnTimeSetListener onTimeSetListener = new TimePickerDialog.OnTimeSetListener() {

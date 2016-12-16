@@ -7,6 +7,7 @@ import android.support.v4.app.FragmentStatePagerAdapter;
 
 import com.example.doyun.mylifelogger.TabFragments.ObjectiveFragment;
 import com.example.doyun.mylifelogger.TabFragments.SelectWorkFragment;
+import com.example.doyun.mylifelogger.TabFragments.ViewdayFragment;
 import com.example.doyun.mylifelogger.TabFragments.statisticsTapFragment;
 
 import java.io.Serializable;
@@ -21,6 +22,7 @@ public class TabPagerAdapter extends FragmentStatePagerAdapter {
     SelectWorkFragment selectWorkFragment;
     com.example.doyun.mylifelogger.TabFragments.statisticsTapFragment statisticsTapFragment;
     ObjectiveFragment objectiveFragment;
+    ViewdayFragment viewdayFragment;
 
     public TabPagerAdapter(FragmentManager fm, int tabCount) {
         super(fm);
@@ -31,15 +33,19 @@ public class TabPagerAdapter extends FragmentStatePagerAdapter {
     public Fragment getItem(int position) {
         switch (position){
             case 0:
-                if(selectWorkFragment==null)
+                //if(selectWorkFragment==null)
                     selectWorkFragment = new SelectWorkFragment();
                 return selectWorkFragment;
             case 1:
-                if(statisticsTapFragment==null)
+                //if(viewdayFragment==null)
+                    viewdayFragment = new ViewdayFragment();
+                return viewdayFragment;
+            case 2:
+                //if(statisticsTapFragment==null)
                     statisticsTapFragment = new statisticsTapFragment();
                 return statisticsTapFragment;
-            case 2:
-                if(objectiveFragment==null)
+            case 3:
+                //if(objectiveFragment==null)
                      objectiveFragment = new ObjectiveFragment();
                 return objectiveFragment;
         }

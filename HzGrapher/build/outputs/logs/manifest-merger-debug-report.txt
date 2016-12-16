@@ -1,0 +1,113 @@
+-- Merging decision tree log ---
+manifest
+ADDED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml:2:1-64:12
+	package
+		ADDED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml:3:5-47
+	android:versionName
+		ADDED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml:5:5-32
+		INJECTED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml
+		INJECTED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml
+	android:versionCode
+		ADDED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml:4:5-28
+		INJECTED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml
+		INJECTED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml
+	xmlns:android
+		ADDED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml:2:11-69
+uses-sdk
+ADDED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml:7:5-9:41
+MERGED from [com.handstudio.android:library:1.0.0] C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\build\intermediates\exploded-aar\com.handstudio.android\library\1.0.0\AndroidManifest.xml:7:5-9:41
+	android:targetSdkVersion
+		ADDED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml:9:9-38
+		INJECTED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml
+		INJECTED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml
+	android:minSdkVersion
+		ADDED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml:8:9-34
+		INJECTED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml
+		INJECTED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml
+application
+ADDED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml:11:5-62:19
+MERGED from [com.handstudio.android:library:1.0.0] C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\build\intermediates\exploded-aar\com.handstudio.android\library\1.0.0\AndroidManifest.xml:11:5-16:19
+	android:label
+		ADDED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml:14:9-41
+	android:allowBackup
+		ADDED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml:12:9-35
+	android:icon
+		ADDED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml:13:9-45
+	android:theme
+		ADDED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml:15:9-40
+activity#com.handstudio.android.hzgrapher.MainActivity
+ADDED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml:16:9-24:20
+	android:label
+		ADDED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml:18:13-45
+	android:name
+		ADDED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml:17:13-73
+intent-filter#android.intent.action.MAIN+android.intent.category.LAUNCHER
+ADDED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml:19:13-23:29
+action#android.intent.action.MAIN
+ADDED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml:20:17-69
+	android:name
+		ADDED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml:20:25-66
+category#android.intent.category.LAUNCHER
+ADDED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml:22:17-77
+	android:name
+		ADDED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml:22:27-74
+activity#com.handstudio.android.hzgrapher.LineGraphActivity
+ADDED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml:25:9-28:20
+	android:label
+		ADDED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml:27:13-45
+	android:name
+		ADDED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml:26:13-78
+activity#com.handstudio.android.hzgrapher.LineGraphWithRegionActivity
+ADDED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml:29:9-32:20
+	android:label
+		ADDED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml:31:13-45
+	android:name
+		ADDED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml:30:13-88
+activity#com.handstudio.android.hzgrapher.LineCompareGraphActivity
+ADDED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml:33:9-36:20
+	android:label
+		ADDED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml:35:13-45
+	android:name
+		ADDED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml:34:13-85
+activity#com.handstudio.android.hzgrapher.CircleGraphActivity
+ADDED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml:37:9-38:20
+	android:name
+		ADDED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml:37:19-86
+activity#com.handstudio.android.hzgrapher.PieGraphActivity
+ADDED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml:39:9-40:20
+	android:name
+		ADDED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml:39:19-83
+activity#com.handstudio.android.hzgrapher.RadarGraphActivity
+ADDED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml:41:9-44:20
+	android:label
+		ADDED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml:43:13-45
+	android:name
+		ADDED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml:42:13-79
+activity#com.handstudio.android.hzgrapher.BubbleGraphActivity
+ADDED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml:45:9-98
+	android:name
+		ADDED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml:45:19-86
+activity#com.handstudio.android.hzgrapher.CurveGraphActivity
+ADDED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml:46:9-49:20
+	android:label
+		ADDED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml:48:13-45
+	android:name
+		ADDED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml:47:13-79
+activity#com.handstudio.android.hzgrapher.CurveGraphWithRegionActivity
+ADDED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml:50:9-53:20
+	android:label
+		ADDED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml:52:13-45
+	android:name
+		ADDED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml:51:13-89
+activity#com.handstudio.android.hzgrapher.CurveCompareGraphActivity
+ADDED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml:54:9-57:20
+	android:label
+		ADDED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml:56:13-45
+	android:name
+		ADDED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml:55:13-86
+activity#com.handstudio.android.hzgrapher.ScatterGraphActivity
+ADDED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml:58:9-61:20
+	android:label
+		ADDED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml:60:13-45
+	android:name
+		ADDED from C:\Users\doyun\AndroidStudioProjects\MyLifeLogger\HzGrapher\AndroidManifest.xml:59:13-81

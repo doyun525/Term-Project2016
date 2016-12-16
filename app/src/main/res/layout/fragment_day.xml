@@ -1,0 +1,81 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.example.doyun.mylifelogger.TabFragments.SatisticsSubTab.DayFragment">
+
+    <!-- TODO: Update blank fragment layout -->
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center">
+
+            <Button
+                android:text="이전"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/daytab_previousday"
+                android:layout_weight="0"
+                style="@style/Widget.AppCompat.Button.Small" />
+
+            <TextView
+                android:text="TextView"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:id="@+id/daytab_selectDate"
+                android:layout_weight="50"
+                android:textAppearance="@style/Base.TextAppearance.AppCompat.Large"
+                android:gravity="center" />
+
+            <Button
+                android:text="다음"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/daytab_nextday"
+                android:layout_weight="0"
+                style="@style/Widget.AppCompat.Button.Small" />
+        </LinearLayout>
+
+        <RelativeLayout
+            android:id="@+id/layoutGraphView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"/>
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="0">
+
+            <TextView
+                android:text="Total : "
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/textView3"
+                android:layout_weight="0" />
+
+            <TextView
+                android:text="TextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/day_totaltime"
+                android:layout_weight="1" />
+
+        </LinearLayout>
+
+        <ListView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/daytab_listview"
+            android:layout_weight="1"/>
+
+    </LinearLayout>
+
+</FrameLayout>

@@ -1,57 +1,55 @@
 package com.example.doyun.mylifelogger.TabFragments;
 
 import android.Manifest;
-import android.app.DatePickerDialog;
-import android.app.TimePickerDialog;
+import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.sqlite.SQLiteDatabase;
 import android.location.Location;
-import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.IBinder;
+import android.os.Message;
+import android.os.Messenger;
+import android.os.Parcelable;
+import android.os.RemoteException;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.TimePicker;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import com.example.doyun.mylifelogger.AddEventDialog;
 import com.example.doyun.mylifelogger.DB.DBHelper;
 import com.example.doyun.mylifelogger.DB.MyEvent;
-import com.example.doyun.mylifelogger.DB.MyWorkData;
-import com.example.doyun.mylifelogger.MapPopupActivity;
+import com.example.doyun.mylifelogger.DB.MyWork;
 import com.example.doyun.mylifelogger.R;
+import com.example.doyun.mylifelogger.gpsService;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.LocationAvailability;
-import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.maps.model.LatLng;
 import com.google.gson.Gson;
 
-import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -76,15 +74,19 @@ public class SelectWorkFragment extends Fragment implements GoogleApiClient.Conn
     public static final int ADD_MODE_EVENT = 0;
     public static final int ADD_MODE_WORK = 1;
 
+    public static final int CONNECT_FRAGMENT = 0;
+    public static final int SET_MOVEING = 1;
+    public static final int START_MOVEING = 2;
+    public static final int END_MOVEING = 3;
+    public static final int SET_WORK = 4;
+
+
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
 
     private OnFragmentInteractionListener mListener;
 
-    private Location lastedLocation;
-    private int LocationCheckCycle;
-    private int lastedTime;
     private Boolean move = null;
 
     private String[] defaultWorkList = {"업무", "공부", "게임", "과제", "운동", "이동"};
@@ -92,7 +94,7 @@ public class SelectWorkFragment extends Fragment implements GoogleApiClient.Conn
 
     private String presentWorkType;
 
-    private MyWorkData myWorkData;
+    private MyWork myWork;
     private MyEvent myEvent;
 
     private String content;
@@ -112,11 +114,127 @@ public class SelectWorkFragment extends Fragment implements GoogleApiClient.Conn
 
     SharedPreferences mPrefs;
 
-    private GoogleApiClient mGoogleApiClient;
-    private LocationRequest mLocationRequest;
+    private Messenger mService = null;
+    private Messenger mMessenger = new Messenger(new IncomingHandler());
+    private boolean mBound = false;
 
     SQLiteDatabase db;
     DBHelper dbHelper;
+
+    private GoogleApiClient mGoogleApiClient;
+    private LocationRequest mLocationRequest;
+
+    private Location location;
+
+    private ServiceConnection mConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            mService = new Messenger(service);
+            mBound = true;
+            try {
+                Message msg = Message.obtain(null, CONNECT_FRAGMENT);
+                msg.replyTo = mMessenger;
+                mService.send(msg);
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            mService = null;
+            mBound = false;
+        }
+    };
+
+    public void startServiceMethod() {
+        Intent intent = new Intent(getActivity(), gpsService.class);
+        getActivity().bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+    }
+
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+        if (ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+        location = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+
+    }
+
+    private class IncomingHandler extends Handler {
+
+        @Override
+        public void handleMessage(Message msg) {
+            Bundle bundle = msg.getData();
+            ;
+            bundle.setClassLoader(getActivity().getClassLoader());
+            switch (msg.what) {
+
+                case gpsService.START_AUTO_SAVE_LOCATION: {
+
+                    if (worktoggle.isChecked()) {
+                        SaveEnd();
+                    }
+                    presentWorkType = "이동";
+                    workText.setText(presentWorkType);
+                    worktoggle.setChecked(true);
+
+                    //myWork = (MyWork) msg.getData().getSerializable("mywork");
+                    myWork = (MyWork) bundle.get("mywork");
+                    //SaveStart();
+                    break;
+                }
+                case gpsService.END_AUTO_SAVE_LOCATION: {
+                    worktoggle.setChecked(false);
+                    myWork = (MyWork) bundle.get("mywork");
+
+                    //SaveEnd();
+                    break;
+                }
+                case gpsService.STATE_MOVE: {
+                    if (!msg.getData().getBoolean("moving")) break;
+                    if (worktoggle.isChecked()) {
+                        if (!presentWorkType.equals("이동")) {
+                            SaveEnd();
+                            presentWorkType = "이동";
+                            workText.setText(presentWorkType);
+                        }
+
+                    }
+                    worktoggle.setChecked(true);
+                    myWork = (MyWork) msg.getData().getSerializable("mywork");
+                    break;
+                }
+                case 10: {
+                    //Log.d("test", "service에서 받음 : "+msg.getData().getSerializable("1") + ", " + msg.arg1);
+                    break;
+                }
+            }
+        }
+    }
+
+    ;
 
     public SelectWorkFragment() {
         // Required empty public constructor
@@ -159,26 +277,30 @@ public class SelectWorkFragment extends Fragment implements GoogleApiClient.Conn
             }
             if (workList != null)
                 presentWorkType = workList.get(0).toString();
+            else presentWorkType = defaultWorkList[0];
         }
         Calendar c = Calendar.getInstance();
         Date d = c.getTime();
-        String date = (new SimpleDateFormat("yyyy-MM-dd").format(d));
+        String date = (new SimpleDateFormat("yyyy-MM").format(d));
         dbHelper = new DBHelper(getActivity(), date + ".db");
 
         db = dbHelper.getWritableDatabase();
-
-        LocationCheckCycle = 60 * 1000;
-        if (move == null)
-            move = false;
 
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
             mParam1 = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
+        if (mGoogleApiClient == null) {
+            mGoogleApiClient = new GoogleApiClient.Builder(getActivity()).
+                    addConnectionCallbacks(this).
+                    addOnConnectionFailedListener(this).
+                    addApi(LocationServices.API).build();
+        }
 
 
     }
+
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
@@ -220,74 +342,78 @@ public class SelectWorkFragment extends Fragment implements GoogleApiClient.Conn
         prefsEditor.commit();
 
         db.close();
-
-        if (mGoogleApiClient.isConnected()) {
-            mGoogleApiClient.disconnect();
-        }
     }
 
     @Override
     public void onStart() {
         super.onStart();
-        if (!mGoogleApiClient.isConnected()) {
-            mGoogleApiClient.connect();
-        }
+        startServiceMethod();
+        mGoogleApiClient.connect();
     }
 
     @Override
     public void onStop() {
         super.onStop();
-        if (mGoogleApiClient.isConnected()) {
-            mGoogleApiClient.disconnect();
-        }
+        getActivity().unbindService(mConnection);
+        mGoogleApiClient.disconnect();
     }
 
-    public void SaveStart(){
+    public void SaveStart() {
         Calendar c = Calendar.getInstance();
         Date d = c.getTime();
         String date = (new SimpleDateFormat("yyyy-MM-dd").format(d));
         String time = (new SimpleDateFormat("HH:mm").format(d));
-
-        if (myWorkData == null)
-            myWorkData = new MyWorkData(date, time, presentWorkType, null);
-        //save db
-        if (presentWorkType == "이동") {
-            move = true;
+        if (myWork == null) {
+            myWork = new MyWork(date, time, presentWorkType, null);
+        } else {
+            myWork.setName(presentWorkType);
+            myWork.setStartTime(date, time);
         }
+        //save db
+
         Gson gson = new Gson();
-        String json = gson.toJson(myWorkData);
+        String json = gson.toJson(myWork);
 
         ContentValues values = new ContentValues();
-        values.put("time", myWorkData.getStartTime().getTime());
+        values.put("date", myWork.getStartTime().getDate());
+        values.put("time", myWork.getStartTime().getTime());
         values.put("mywork", json);
-
+        Log.d("test", "save start mywork : " + myWork + "time : " + myWork.getStartTime().getTime());
+        Log.d("test", "save start mywork : " + myWork.getLocation());
         db.insert("work", null, values);
     }
-    public void SaveEnd(){
+
+    public void SaveEnd() {
         Calendar c = Calendar.getInstance();
         Date d = c.getTime();
         String date = (new SimpleDateFormat("yyyy-MM-dd").format(d));
         String time = (new SimpleDateFormat("HH:mm").format(d));
-        myWorkData.setEndTime(date, time);
+        myWork.setEndTime(date, time);
         //save db
         Gson gson = new Gson();
-        String json = gson.toJson(myWorkData);
+        String json = gson.toJson(myWork);
 
         ContentValues values = new ContentValues();
-        values.put("myevent", json);
+        values.put("mywork", json);
+        Log.d("test", "save end mywork : " + myWork + "time : " + myWork.getStartTime().getTime());
+        Log.d("test", "save end mywork : " + myWork.getLocation());
 
-        db.update("work", values, "time = ?", new String[]{myWorkData.getStartTime().getTime()});
+            db.update("work", values, "date =? and time = ?", new String[]{myWork.getStartTime().getDate(), myWork.getStartTime().getTime()});
+
+        myWork=null;
+
     }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        Gson gson = new Gson();
         if (resultCode == AddEventDialog.CLICK_OK) {
             if (requestCode == ADD_MODE_EVENT) {
-                MyEvent event = (MyEvent) data.getSerializableExtra("event");
-                Gson gson = new Gson();
-                String json = gson.toJson(event);
 
+                String json = data.getStringExtra("event");
+                MyEvent event = gson.fromJson(json, MyEvent.class);
+                Log.d("test", "event location:" + event.getLocation());
                 ContentValues values = new ContentValues();
                 values.put("time", event.getDate().getTime());
                 values.put("myevent", json);
@@ -295,7 +421,22 @@ public class SelectWorkFragment extends Fragment implements GoogleApiClient.Conn
                 db.insert("event", null, values);
 
             } else if (requestCode == ADD_MODE_WORK) {
-                myWorkData = (MyWorkData) data.getSerializableExtra("work");
+
+                myWork = (MyWork) data.getSerializableExtra("mywork");
+                //myWork = gson.fromJson(data.getStringExtra("mywork"), MyWork.class);
+                Log.d("test", "work 데이터 받음 : " + myWork.getLocation());
+
+                if (presentWorkType.equals("이동") && worktoggle.isChecked()) {
+                    Message msg = Message.obtain(null, SET_WORK);
+                    msg.arg1 = START_MOVEING;
+                    Bundle bundle1 = new Bundle();
+                    bundle1.putSerializable("mywork", myWork);
+                    try {
+                        mService.send(msg);
+                    } catch (RemoteException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
         }
     }
@@ -308,12 +449,6 @@ public class SelectWorkFragment extends Fragment implements GoogleApiClient.Conn
         if (workList == null)
             workList = new ArrayList<String>(Arrays.asList(defaultWorkList));
         Log.d("test", "worklist : " + workList);
-        if (mGoogleApiClient == null) {
-            mGoogleApiClient = new GoogleApiClient.Builder(getActivity()).
-                    addConnectionCallbacks(this).
-                    addOnConnectionFailedListener(this).
-                    addApi(LocationServices.API).build();
-        }
 
         ArrayAdapter adapter = new ArrayAdapter(getActivity(), android.R.layout.simple_list_item_1, workList);
         workListView.setAdapter(adapter);
@@ -348,11 +483,74 @@ public class SelectWorkFragment extends Fragment implements GoogleApiClient.Conn
         worktoggle.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                /*
+                Message msg = Message.obtain(null, 10);
+                msg.arg1 = 1111;
+                Bundle bundle1 = new Bundle();
+                bundle1.putSerializable("1","플레그먼트에서 보냄");
+                msg.setData(bundle1); ;
+                try {
+                    mService.send(msg);
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                }*/
+                Log.d("test", "toggle : " + worktoggle.isChecked());
+                Calendar c = Calendar.getInstance();
+                Date d = c.getTime();
+                String date = (new SimpleDateFormat("yyyy-MM-dd").format(d));
+                String time = (new SimpleDateFormat("HH:mm").format(d));
+                if (ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    // TODO: Consider calling
+                    //    ActivityCompat#requestPermissions
+                    // here to request the missing permissions, and then overriding
+                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                    //                                          int[] grantResults)
+                    // to handle the case where the user grants the permission. See the documentation
+                    // for ActivityCompat#requestPermissions for more details.
+                    return;
+                }
+                location = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
                 if (worktoggle.isChecked()) {
-                    SaveStart();
+                    Log.d("test", "toggle 시작 : "+worktoggle.isChecked() +"일 : "+presentWorkType);
+
+
+                    if (myWork == null) {
+                        myWork = new MyWork(date, time, presentWorkType, location);
+                    }
+
+                    if(presentWorkType.equals("이동")){
+                        Log.d("test", "이동 시작 : ");
+                        Message msg = Message.obtain(null, SET_MOVEING);
+                        msg.arg1 = START_MOVEING;
+                        Bundle bundle1 = new Bundle();
+                        bundle1.putSerializable("mywork",myWork);
+                        msg.setData(bundle1);
+                        try {
+                            mService.send(msg);
+                        } catch (RemoteException e) {
+                            e.printStackTrace();
+                        }
+                        return;
+                    }
+                    else SaveStart();
                 } else {
+                    Log.d("test", "toggle 종료 : "+worktoggle.isChecked());
+                    if(presentWorkType.equals("이동")){
+                        Message msg = Message.obtain(null, SET_MOVEING);
+                        msg.arg1 = END_MOVEING;
+                        Bundle bundle1 = new Bundle();
+                        bundle1.putSerializable("mywork",myWork);
+                        msg.setData(bundle1);
+                        try {
+                            mService.send(msg);
+                        } catch (RemoteException e) {
+                            e.printStackTrace();
+                        }
+                        return;
+                    }
                     SaveEnd();
                 }
+
             }
         });
 
@@ -363,7 +561,9 @@ public class SelectWorkFragment extends Fragment implements GoogleApiClient.Conn
 
 
                 Intent intent = new Intent(getActivity(), AddEventDialog.class);
-                if(myWorkData!=null) intent.putExtra("mywork", myWorkData);
+                if(myWork ==null)
+                    myWork = new MyWork();
+                intent.putExtra("mywork", (Parcelable) myWork);
                 intent.putExtra("mode", ADD_MODE_WORK).putExtra("workType", presentWorkType);
                 startActivityForResult(intent, ADD_MODE_WORK);
             }
@@ -404,7 +604,6 @@ public class SelectWorkFragment extends Fragment implements GoogleApiClient.Conn
                 int pos = position;
                 presentWorkType = (String) parent.getItemAtPosition(pos);
                 workText.setText(presentWorkType);
-                selectWorkGroup.setVisibility(View.GONE);
 
             }
         });
@@ -458,78 +657,6 @@ public class SelectWorkFragment extends Fragment implements GoogleApiClient.Conn
 
     }
 
-    @Override
-    public void onConnected(@Nullable Bundle bundle) {
-        mLocationRequest = new LocationRequest();
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        mLocationRequest.setInterval(LocationCheckCycle/2);
-        mLocationRequest.setFastestInterval(LocationCheckCycle/4);
-
-        if(PackageManager.PERMISSION_GRANTED != ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_COARSE_LOCATION)
-                && ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED){
-        }
-        lastedLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
-        startLocationUpdates();
-    }
-    protected void startLocationUpdates() {
-        if (ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                && ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
-        else {
-            LocationAvailability locationAvailability = LocationServices.FusedLocationApi.getLocationAvailability(mGoogleApiClient);
-
-            if (locationAvailability.isLocationAvailable()) {
-                LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
-            } else {
-                Toast.makeText(getActivity(), "Location Unavialable", Toast.LENGTH_LONG).show();
-            }
-        }
-    }
-
-    @Override
-    public void onConnectionSuspended(int i) {
-
-    }
-
-    @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-
-    }
-
-
-
-    @Override
-    public void onLocationChanged(Location location) {
-        double distance = 0;
-        long time = System.currentTimeMillis();
-        if((distance = lastedLocation.distanceTo(location)) > 10){
-            if(worktoggle.isChecked()){
-
-            }
-        }
-        if(location.getAccuracy()<=20 && time -lastedTime>=LocationCheckCycle) {
-            if (lastedLocation == null) {
-                lastedLocation = new Location("");
-                lastedLocation.setLatitude(location.getLatitude());
-                lastedLocation.setLongitude(location.getLongitude());
-
-            } else if ((distance = lastedLocation.distanceTo(location)) > 10) {
-
-                lastedLocation.setLatitude(location.getLatitude());
-                lastedLocation.setLongitude(location.getLongitude());
-            }
-            Log.d("test", "LocationCheckCycle " + LocationCheckCycle);
-        }
-    }
-
 
 
     /*
@@ -555,8 +682,8 @@ public class SelectWorkFragment extends Fragment implements GoogleApiClient.Conn
         super.onDetach();
         mListener = null;
     }
-    */
-    /**
+
+
      * This interface must be implemented by activities that contain this
      * fragment to allow an interaction in this fragment to be communicated
      * to the activity and potentially other fragments contained in that

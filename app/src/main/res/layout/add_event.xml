@@ -75,14 +75,15 @@
         android:selectAllOnFocus="false" />
 
     <LinearLayout
-        android:orientation="horizontal"
+        android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
         <ImageView
             android:id="@+id/imageView"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent" />
+            android:layout_width="match_parent"
+            android:adjustViewBounds="true"
+            android:layout_height="150dp" />
 
         <Button
             android:text="사진 추가"

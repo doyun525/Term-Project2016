@@ -1,20 +1,28 @@
 package com.example.doyun.mylifelogger.TabFragments;
 
+import android.app.DatePickerDialog;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
+import android.support.v4.view.ViewPager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import com.example.doyun.mylifelogger.R;
+import com.example.doyun.mylifelogger.TabPagerAdapter;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+
+import java.util.Calendar;
+import java.util.Date;
 
 
 /**
@@ -25,7 +33,7 @@ import com.google.android.gms.maps.SupportMapFragment;
  * Use the {@link statisticsTapFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class statisticsTapFragment extends Fragment implements OnMapReadyCallback{
+public class statisticsTapFragment extends Fragment{
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
@@ -37,16 +45,9 @@ public class statisticsTapFragment extends Fragment implements OnMapReadyCallbac
 
     private OnFragmentInteractionListener mListener;
 
-    private MapView mapView;
-    private GoogleMap mMap;
-    private SupportMapFragment mapFragment;
+    private TabLayout tabLayout;
+    private ViewPager viewPager;
 
-    private Button statistics_day;
-    private Button statistics_week;
-    private Button statistics_month;
-
-    private TextView statistics_week_view;
-    private TextView statistics_month_view;
 
     public statisticsTapFragment() {
         // Required empty public constructor
@@ -87,16 +88,8 @@ public class statisticsTapFragment extends Fragment implements OnMapReadyCallbac
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_statistics_tap, container, false);
-
-        mapFragment = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map);
-
-        mapFragment.getMapAsync(this);
-
-        statistics_day = (Button) view.findViewById(R.id.statistics_day);
-        statistics_week = (Button) view.findViewById(R.id.statistics_week);
-        statistics_month = (Button) view.findViewById(R.id.statistics_month);
-        statistics_week_view = (TextView) view.findViewById(R.id.statistics_week_view);
-        statistics_month_view = (TextView) view.findViewById(R.id.statistics_month_view);
+        tabLayout = (TabLayout) view.findViewById(R.id.subtabLayout);
+        viewPager = (ViewPager) view.findViewById(R.id.subpager);
 
         return view;
 
@@ -106,45 +99,28 @@ public class statisticsTapFragment extends Fragment implements OnMapReadyCallbac
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        statistics_day.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                statistics_week_view.setVisibility(View.GONE);
-                statistics_month_view.setVisibility(View.GONE);
-                if(mapFragment.getView().getVisibility()!= View.VISIBLE){
-                    mapFragment.getView().setVisibility(View.VISIBLE);
-                }
-                else {
-                    mapFragment.getView().setVisibility(View.GONE);
-                }
-            }
-        });
+        tabLayout.addTab(tabLayout.newTab().setText("일일 통계"));
+        tabLayout.addTab(tabLayout.newTab().setText("한달 통계"));
+        tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
 
-        statistics_week.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mapFragment.getView().setVisibility(View.GONE);
-                statistics_month_view.setVisibility(View.GONE);
-                if(statistics_week_view.getVisibility()!=View.VISIBLE){
-                    statistics_week_view.setVisibility(View.VISIBLE);
-                }
-                else{
-                    statistics_week_view.setVisibility(View.GONE);
-                }
-            }
-        });
+        TabPagerAdapter pagerAdapter = new TabPagerAdapter(getActivity().getSupportFragmentManager(), tabLayout.getTabCount());
+        viewPager.setAdapter(pagerAdapter);
+        viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
 
-        statistics_month.setOnClickListener(new View.OnClickListener() {
+        tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
-            public void onClick(View v) {
-                mapFragment.getView().setVisibility(View.GONE);
-                statistics_week_view.setVisibility(View.GONE);
-                if(statistics_month_view.getVisibility()!=View.VISIBLE){
-                    statistics_month_view.setVisibility(View.VISIBLE);
-                }
-                else{
-                    statistics_month_view.setVisibility(View.GONE);
-                }
+            public void onTabSelected(TabLayout.Tab tab) {
+                viewPager.setCurrentItem(tab.getPosition());
+            }
+
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {
+
+            }
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {
+
             }
         });
 
@@ -175,12 +151,6 @@ public class statisticsTapFragment extends Fragment implements OnMapReadyCallbac
             mListener = null;
         }
     */
-    @Override
-    public void onMapReady(GoogleMap googleMap) {
-
-        mMap = googleMap;
-        mapFragment.getView().setVisibility(View.GONE);
-    }
 
 
     /**
