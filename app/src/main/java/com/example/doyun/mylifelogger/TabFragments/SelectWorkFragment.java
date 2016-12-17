@@ -371,7 +371,7 @@ public class SelectWorkFragment extends Fragment implements GoogleApiClient.Conn
             myWork = new MyWork(date, time, presentWorkType, null);
         } else {
             myWork.setName(presentWorkType);
-            //myWork.setStartTime(date, time);
+            myWork.setStartTime(date, time);
         }
         //save db
 
@@ -389,7 +389,7 @@ public class SelectWorkFragment extends Fragment implements GoogleApiClient.Conn
 
     public void SaveEnd() {
         Calendar c = Calendar.getInstance();
-        c.set(c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH), myWork.getStartTime().getHour()+2, c.get(Calendar.MINUTE));
+        //c.set(c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH), myWork.getStartTime().getHour()+2, c.get(Calendar.MINUTE));
         Date d = c.getTime();
         String date = (new SimpleDateFormat("yyyy-MM-dd").format(d));
         String time = (new SimpleDateFormat("HH:mm").format(d));
@@ -420,6 +420,7 @@ public class SelectWorkFragment extends Fragment implements GoogleApiClient.Conn
                 MyEvent event = gson.fromJson(json, MyEvent.class);
                 Log.d("test", "event location:" + event.getLocation());
                 ContentValues values = new ContentValues();
+                values.put("date", event.getDate().getDate());
                 values.put("time", event.getDate().getTime());
                 values.put("myevent", json);
 

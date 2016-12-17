@@ -210,6 +210,7 @@ public class ViewdayFragment extends Fragment implements OnMapReadyCallback {
         while (cursorEvent.moveToNext()) {
             String json = cursorEvent.getString(3);
             MyEvent myEvent = gson.fromJson(json, MyEvent.class);
+            Log.d("test", "myevent : " + myEvent.getDate().getTime());
             arrayList.add(myEvent);
         }
         Log.d("test", "list : " + arrayList);

@@ -198,7 +198,7 @@ public class MonthFragment extends Fragment {
 
         // set text setting
         vo.setTextColor(Color.WHITE);
-        vo.setTextSize(40);
+        vo.setTextSize(30);
 
         // set circle center move X ,Y
         vo.setCenterX(0);

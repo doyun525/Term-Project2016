@@ -232,8 +232,8 @@ public class AddEventDialog extends Activity implements GoogleApiClient.Connecti
         else if(mode==SelectWorkFragment.ADD_MODE_WORK){
             setTitle("내용 추가");
             title.setFocusable(false);
-            //edit_time.setVisibility(View.GONE);
-            //edit_date.setVisibility(View.GONE);
+            edit_time.setVisibility(View.GONE);
+            edit_date.setVisibility(View.GONE);
             myWork = intent.getParcelableExtra("mywork");
             workType = intent.getStringExtra("workType");
             Log.d("test", "workType:"+workType);
