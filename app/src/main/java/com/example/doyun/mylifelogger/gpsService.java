@@ -215,7 +215,7 @@ public class gpsService extends Service implements GoogleApiClient.ConnectionCal
         autoMoveSave =true;
         Moveing=false;
 
-        LocationCheckCycle = 1000;
+        LocationCheckCycle = 1000*60;
         lastedTime = System.currentTimeMillis();
 
 
