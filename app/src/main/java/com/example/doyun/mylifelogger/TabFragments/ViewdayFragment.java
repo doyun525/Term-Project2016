@@ -146,6 +146,15 @@ public class ViewdayFragment extends Fragment implements OnMapReadyCallback {
     }
 
     @Override
+    public void setUserVisibleHint(boolean isVisibleToUser) {
+        if(isVisibleToUser) {
+            if(mMap!=null && getActivity()!=null){
+                setMap();
+            }
+        }
+    }
+
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
@@ -175,9 +184,13 @@ public class ViewdayFragment extends Fragment implements OnMapReadyCallback {
         if (db != null) db.close();
         d = c.getTime();
         String date1 = (new SimpleDateFormat("yyyy-MM").format(d));
-        Log.d("test", "date : " + date1);
+
         dbHelper = new DBHelper(getActivity(), date1 + ".db");
-        db = dbHelper.getWritableDatabase();
+        Log.d("test", "date : " + date1 + " dbh : " + dbHelper+" getatctivity :" +getActivity());
+
+            db = dbHelper.getWritableDatabase();
+
+
 
         Gson gson = new Gson();
 
@@ -273,6 +286,7 @@ public class ViewdayFragment extends Fragment implements OnMapReadyCallback {
             }
         });
     }
+
     public void showAlert(MyData orj){
         View v = LayoutInflater.from(getActivity()).inflate(R.layout.view_event, null);
 

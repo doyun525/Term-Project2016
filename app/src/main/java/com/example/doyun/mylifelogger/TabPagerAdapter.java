@@ -4,6 +4,8 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
+import android.util.Log;
+import android.view.ViewGroup;
 
 import com.example.doyun.mylifelogger.TabFragments.ObjectiveFragment;
 import com.example.doyun.mylifelogger.TabFragments.SelectWorkFragment;
@@ -30,6 +32,17 @@ public class TabPagerAdapter extends FragmentStatePagerAdapter {
     }
 
     @Override
+    public int getItemPosition(Object object) {
+        Log.d("test","getItemPosition 불림");
+        if(object instanceof ViewdayFragment) {
+            Log.d("test", "getItemPosition viewday 불림");
+
+            ((ViewdayFragment) object).setMap();
+        }
+        return super.getItemPosition(object);
+    }
+
+    @Override
     public Fragment getItem(int position) {
         switch (position){
             case 0:
@@ -37,7 +50,8 @@ public class TabPagerAdapter extends FragmentStatePagerAdapter {
                     selectWorkFragment = new SelectWorkFragment();
                 return selectWorkFragment;
             case 1:
-                //if(viewdayFragment==null)
+                Log.d("test","viewday 불림");
+                if(viewdayFragment==null)
                     viewdayFragment = new ViewdayFragment();
                 return viewdayFragment;
             case 2:

@@ -1,28 +1,19 @@
 package com.example.doyun.mylifelogger.TabFragments;
 
-import android.app.DatePickerDialog;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
-import android.support.v4.view.ViewPager;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.ListView;
-import android.widget.TextView;
 
 import com.example.doyun.mylifelogger.R;
-import com.example.doyun.mylifelogger.TabPagerAdapter;
-import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.MapView;
-import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.SupportMapFragment;
-
-import java.util.Calendar;
-import java.util.Date;
+import com.example.doyun.mylifelogger.TabFragments.SatisticsSubTab.DayFragment;
+import com.example.doyun.mylifelogger.TabFragments.SatisticsSubTab.MonthFragment;
 
 
 /**
@@ -45,8 +36,7 @@ public class statisticsTapFragment extends Fragment{
 
     private OnFragmentInteractionListener mListener;
 
-    private TabLayout tabLayout;
-    private ViewPager viewPager;
+    private Button daytab, monthtab;
 
 
     public statisticsTapFragment() {
@@ -88,9 +78,9 @@ public class statisticsTapFragment extends Fragment{
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_statistics_tap, container, false);
-        tabLayout = (TabLayout) view.findViewById(R.id.subtabLayout);
-        viewPager = (ViewPager) view.findViewById(R.id.subpager);
 
+        daytab = (Button)view.findViewById(R.id.daytab);
+        monthtab = (Button)view.findViewById(R.id.monthtab);
         return view;
 
     }
@@ -98,32 +88,30 @@ public class statisticsTapFragment extends Fragment{
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
+        FragmentManager fm = getFragmentManager();
+        FragmentTransaction fragmentTransaction = fm.beginTransaction();
+        fragmentTransaction.add(R.id.framelayout, new DayFragment());
+        fragmentTransaction.commit();
 
-        tabLayout.addTab(tabLayout.newTab().setText("일일 통계"));
-        tabLayout.addTab(tabLayout.newTab().setText("한달 통계"));
-        tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
-
-        TabPagerAdapter pagerAdapter = new TabPagerAdapter(getActivity().getSupportFragmentManager(), tabLayout.getTabCount());
-        viewPager.setAdapter(pagerAdapter);
-        viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
-
-        tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+        daytab.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onTabSelected(TabLayout.Tab tab) {
-                viewPager.setCurrentItem(tab.getPosition());
-            }
-
-            @Override
-            public void onTabUnselected(TabLayout.Tab tab) {
-
-            }
-
-            @Override
-            public void onTabReselected(TabLayout.Tab tab) {
-
+            public void onClick(View v) {
+                FragmentManager fm = getFragmentManager();
+                FragmentTransaction fragmentTransaction = fm.beginTransaction();
+                fragmentTransaction.replace(R.id.framelayout, new DayFragment());
+                fragmentTransaction.commit();
             }
         });
 
+        monthtab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                FragmentManager fm = getFragmentManager();
+                FragmentTransaction fragmentTransaction = fm.beginTransaction();
+                fragmentTransaction.replace(R.id.framelayout, new MonthFragment());
+                fragmentTransaction.commit();
+            }
+        });
     }
 
     /*

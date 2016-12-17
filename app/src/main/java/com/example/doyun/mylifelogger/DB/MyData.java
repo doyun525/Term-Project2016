@@ -24,12 +24,18 @@ public class MyData implements Serializable, Parcelable{
 
     protected Location location=null;
 
+
+    public MyData() {
+
+    }
+
     protected MyData(Parcel in) {
         name = in.readString();
         content = in.readString();
         place = in.readString();
         image = in.readString();
         location = in.readParcelable(Location.class.getClassLoader());
+        date = (TimeObject) in.readSerializable();
     }
 
     public static final Creator<MyData> CREATOR = new Creator<MyData>() {
@@ -43,10 +49,6 @@ public class MyData implements Serializable, Parcelable{
             return new MyData[size];
         }
     };
-
-    public MyData() {
-
-    }
 
     public String getName() {
         return name;
@@ -98,10 +100,16 @@ public class MyData implements Serializable, Parcelable{
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
+
         dest.writeString(name);
         dest.writeString(content);
         dest.writeString(place);
         dest.writeString(image);
         dest.writeParcelable(location, flags);
+        dest.writeSerializable(date);
     }
+
+
+
+
 }

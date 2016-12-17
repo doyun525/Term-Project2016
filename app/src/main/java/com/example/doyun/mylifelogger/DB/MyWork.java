@@ -90,11 +90,7 @@ public class MyWork extends MyData implements Serializable, Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(name);
-        dest.writeString(content);
-        dest.writeString(place);
-        dest.writeString(image);
-        dest.writeParcelable(location, flags);
+        super.writeToParcel(dest,flags);
         dest.writeTypedList(locatinList);
     }
 

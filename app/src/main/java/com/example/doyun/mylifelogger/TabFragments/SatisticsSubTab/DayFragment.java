@@ -91,6 +91,24 @@ public class DayFragment extends Fragment {
         }
     }
 
+    @Override
+    public void onStart() {
+        Log.d("test", "daytab onStart");
+        super.onStart();
+    }
+
+    @Override
+    public void onStop() {
+        Log.d("test", "daytab onStop");
+        super.onStop();
+    }
+
+    @Override
+    public void onDestroy() {
+        Log.d("test", "daytab onDestroy");
+        super.onDestroy();
+    }
+
     /**
      * Use this factory method to create a new instance of
      * this fragment using the provided parameters.
@@ -140,17 +158,22 @@ public class DayFragment extends Fragment {
         for(int i=0; i< DataList.size();i++){
             MyWork myWork = (MyWork) DataList.get(i);
             String workType = myWork.getName();
-            int time = myWork.getEndTime().getHour()*60+myWork.getEndTime().getMin() - (myWork.getStartTime().getHour()*60 + myWork.getStartTime().getMin());
+            int starttime = myWork.getStartTime().getHour()*60+ myWork.getStartTime().getMin();
+            int endtime = myWork.getEndTime().getHour()*60 + myWork.getEndTime().getMin();
+            if(starttime>endtime) endtime+=60*24;
+            int time = endtime-starttime;
+            Log.d("test", "work : "+workType+ "time : "+time);
             GraphdataType graphdataType = new GraphdataType(workType, time);
             totalTime+=time;
-            for(int j =0;i<graphdataTypeslist.size();i++){
+            for(int j =0;j<graphdataTypeslist.size();j++){
+                Log.d("test", "list work : "+graphdataTypeslist.get(j).workType + " c work : "+workType);
                 if(graphdataTypeslist.get(j).workType.equals(workType)) {
                     graphdataTypeslist.get(j).time += time;
                     graphdataType = null;
                     break;
                 }
             }
-            if(graphdataType == null) break;
+            if(graphdataType == null) continue;
             graphdataTypeslist.add(graphdataType);
         }
         Comparator<GraphdataType> myComparator = new Comparator<GraphdataType>() {
@@ -172,7 +195,7 @@ public class DayFragment extends Fragment {
 
     }
     private void setCircleGraph() {
-
+        layoutGraphView.removeAllViews();
         CircleGraphVO vo = makeLineGraphAllSetting();
 
         layoutGraphView.addView(new CircleGraphView(getActivity(),vo));
@@ -199,7 +222,7 @@ public class DayFragment extends Fragment {
         for (int i=0;i<graphdataTypeslist.size();i++){
             arrGraph.add(new CircleGraph(graphdataTypeslist.get(i).workType, colors[i%colors.length], graphdataTypeslist.get(i).time));
         }
-
+        Log.d("test", "arrgraph : " + arrGraph);
         CircleGraphVO vo = new CircleGraphVO(paddingBottom, paddingTop, paddingLeft, paddingRight,marginTop, marginRight,radius, arrGraph);
 
         // circle Line
@@ -207,7 +230,7 @@ public class DayFragment extends Fragment {
 
         // set text setting
         vo.setTextColor(Color.WHITE);
-        vo.setTextSize(20);
+        vo.setTextSize(40);
 
         // set circle center move X ,Y
         vo.setCenterX(0);
@@ -222,6 +245,7 @@ public class DayFragment extends Fragment {
         // nameBox
         graphNameBox.setNameboxMarginTop(25);
         graphNameBox.setNameboxMarginRight(25);
+        graphNameBox.setNameboxTextSize(30);
 
         vo.setGraphNameBox(graphNameBox);
 

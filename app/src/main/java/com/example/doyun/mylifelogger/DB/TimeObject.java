@@ -1,12 +1,15 @@
 package com.example.doyun.mylifelogger.DB;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import java.io.Serializable;
 
 /**
  * Created by doyun on 2016-12-06.
  */
 
-public class TimeObject implements Serializable {
+public class TimeObject implements Serializable{
     String date;
     String time;
     int year, month, day;
@@ -15,7 +18,11 @@ public class TimeObject implements Serializable {
     TimeObject(String date, String time){
         this.date = date;
         this.time = time;
+        s2intTime(date, time);
     }
+
+
+
     void s2intTime(String date, String time){
         String d[] = date.split("-");
         String t[] = time.split(":");
@@ -53,4 +60,6 @@ public class TimeObject implements Serializable {
     public int getMin() {
         return min;
     }
+
+
 }

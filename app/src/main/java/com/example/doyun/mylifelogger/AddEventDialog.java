@@ -83,6 +83,8 @@ public class AddEventDialog extends Activity implements GoogleApiClient.Connecti
     String date;
     String time;
 
+    private int mYear, mMonth, mDay;
+
     MyEvent myEvent;
 
     MyWork myWork;
@@ -97,6 +99,15 @@ public class AddEventDialog extends Activity implements GoogleApiClient.Connecti
     private LocationRequest mLocationRequest;
 
     Uri mImageCaptureUri;
+
+    AddEventDialog(){
+        calendar = Calendar.getInstance();
+        mYear = calendar.get(Calendar.YEAR);
+        mMonth = calendar.get(Calendar.MONTH) + 1;
+        mDay = calendar.get(Calendar.DAY_OF_MONTH);
+        date = (new SimpleDateFormat("yyyy-MM-dd").format(calendar.getTime()));
+        time = (new SimpleDateFormat("HH:mm").format(calendar.getTime()));
+    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -221,8 +232,8 @@ public class AddEventDialog extends Activity implements GoogleApiClient.Connecti
         else if(mode==SelectWorkFragment.ADD_MODE_WORK){
             setTitle("내용 추가");
             title.setFocusable(false);
-            edit_time.setVisibility(View.GONE);
-            edit_date.setVisibility(View.GONE);
+            //edit_time.setVisibility(View.GONE);
+            //edit_date.setVisibility(View.GONE);
             myWork = intent.getParcelableExtra("mywork");
             workType = intent.getStringExtra("workType");
             Log.d("test", "workType:"+workType);
@@ -252,7 +263,8 @@ public class AddEventDialog extends Activity implements GoogleApiClient.Connecti
 
 
         datePickerDialog = new DatePickerDialog(this, mEventDataSetListener, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
-        timePickerDialog = new TimePickerDialog(this, onTimeSetListener, calendar.get(Calendar.HOUR), calendar.get(Calendar.MINUTE), false);
+        timePickerDialog = new TimePickerDialog(this, onTimeSetListener, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE) ,false);
+
 
         edit_date.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -323,7 +335,7 @@ public class AddEventDialog extends Activity implements GoogleApiClient.Connecti
 
                 Calendar c = Calendar.getInstance();
                 Date d = c.getTime();
-                String date = (new SimpleDateFormat("yyyy-MM-dd").format(d));
+                String date1 = (new SimpleDateFormat("yyyy-MM-dd").format(d));
 
                 Intent in = new Intent();
 
@@ -354,6 +366,7 @@ public class AddEventDialog extends Activity implements GoogleApiClient.Connecti
                     else {
                         myWork.setStartTime(date, time);
                         myWork.setContent(s_content);
+                        Log.d("test", "mywork date ; "+myWork.getStartTime().getDate());
                         if (!workType.equals("이동")) {
                             Log.d("test", "이동아님");
                             myWork.setLocation(location);
@@ -417,7 +430,7 @@ public class AddEventDialog extends Activity implements GoogleApiClient.Connecti
     private  TimePickerDialog.OnTimeSetListener onTimeSetListener = new TimePickerDialog.OnTimeSetListener() {
         @Override
         public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
-            calendar.set(hourOfDay, minute);
+            calendar.set(mYear, mMonth, mDay, hourOfDay, minute);
 
             time = (new SimpleDateFormat("HH:mm").format(calendar.getTime()));
             edit_time.setText(time);

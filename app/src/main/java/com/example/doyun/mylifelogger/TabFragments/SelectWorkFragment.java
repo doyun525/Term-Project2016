@@ -40,6 +40,7 @@ import android.widget.ToggleButton;
 
 import com.example.doyun.mylifelogger.AddEventDialog;
 import com.example.doyun.mylifelogger.DB.DBHelper;
+import com.example.doyun.mylifelogger.DB.MyData;
 import com.example.doyun.mylifelogger.DB.MyEvent;
 import com.example.doyun.mylifelogger.DB.MyWork;
 import com.example.doyun.mylifelogger.R;
@@ -115,7 +116,7 @@ public class SelectWorkFragment extends Fragment implements GoogleApiClient.Conn
     SharedPreferences mPrefs;
 
     private Messenger mService = null;
-    private Messenger mMessenger = new Messenger(new IncomingHandler());
+    private Messenger mMessenger;
     private boolean mBound = false;
 
     SQLiteDatabase db;
@@ -187,8 +188,8 @@ public class SelectWorkFragment extends Fragment implements GoogleApiClient.Conn
         @Override
         public void handleMessage(Message msg) {
             Bundle bundle = msg.getData();
-            ;
-            bundle.setClassLoader(getActivity().getClassLoader());
+            //getActivity().getClassLoader()
+            bundle.setClassLoader(MyData.class.getClassLoader());
             switch (msg.what) {
 
                 case gpsService.START_AUTO_SAVE_LOCATION: {
@@ -341,6 +342,7 @@ public class SelectWorkFragment extends Fragment implements GoogleApiClient.Conn
         prefsEditor.putString("workList", json);
         prefsEditor.commit();
 
+
         db.close();
     }
 
@@ -349,6 +351,7 @@ public class SelectWorkFragment extends Fragment implements GoogleApiClient.Conn
         super.onStart();
         startServiceMethod();
         mGoogleApiClient.connect();
+        mMessenger = new Messenger(new IncomingHandler());
     }
 
     @Override
@@ -356,6 +359,7 @@ public class SelectWorkFragment extends Fragment implements GoogleApiClient.Conn
         super.onStop();
         getActivity().unbindService(mConnection);
         mGoogleApiClient.disconnect();
+        mMessenger = null;
     }
 
     public void SaveStart() {
@@ -367,13 +371,13 @@ public class SelectWorkFragment extends Fragment implements GoogleApiClient.Conn
             myWork = new MyWork(date, time, presentWorkType, null);
         } else {
             myWork.setName(presentWorkType);
-            myWork.setStartTime(date, time);
+            //myWork.setStartTime(date, time);
         }
         //save db
 
         Gson gson = new Gson();
         String json = gson.toJson(myWork);
-
+        Log.d("test", "work time : "+myWork.getStartTime().getDate());
         ContentValues values = new ContentValues();
         values.put("date", myWork.getStartTime().getDate());
         values.put("time", myWork.getStartTime().getTime());
@@ -385,6 +389,7 @@ public class SelectWorkFragment extends Fragment implements GoogleApiClient.Conn
 
     public void SaveEnd() {
         Calendar c = Calendar.getInstance();
+        c.set(c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH), myWork.getStartTime().getHour()+2, c.get(Calendar.MINUTE));
         Date d = c.getTime();
         String date = (new SimpleDateFormat("yyyy-MM-dd").format(d));
         String time = (new SimpleDateFormat("HH:mm").format(d));
@@ -424,6 +429,7 @@ public class SelectWorkFragment extends Fragment implements GoogleApiClient.Conn
 
                 myWork = (MyWork) data.getSerializableExtra("mywork");
                 //myWork = gson.fromJson(data.getStringExtra("mywork"), MyWork.class);
+                Log.d("test", "work time : "+myWork.getStartTime().getDate());
                 Log.d("test", "work 데이터 받음 : " + myWork.getLocation());
 
                 if (presentWorkType.equals("이동") && worktoggle.isChecked()) {
